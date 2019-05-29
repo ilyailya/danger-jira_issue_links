@@ -54,12 +54,23 @@ module Danger
       all_issues.uniq
     end
 
+    # Find all issue references in commit messages. 
+    # Title should contain one or more patterns: `[TASK-123]`
+    # @return   [Array<String>]
+    def collect_issues_from_title
+      gitlab.mr_title.scan(/\[(\w+-\d+)\]/).flatten
+    end
+
     # Generates a `markdown` table of issues with type, title and link.
     # Required access to Jira site.
     #
     # @return  [void]
     def print_links_with_titles
       found_issues = collect_issues_from_commits
+      title_issues = collect_issues_from_title
+      if title_issues
+        found_issues.push(*title_issues)
+      end
       return if found_issues.empty?
 
       jira_context_path = '' if jira_context_path.nil?
